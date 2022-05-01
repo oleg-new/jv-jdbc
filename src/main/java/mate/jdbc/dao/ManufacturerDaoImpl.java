@@ -15,6 +15,7 @@ import mate.jdbc.util.ConnectionUtil;
 
 @Dao
 public class ManufacturerDaoImpl implements ManufacturerDao {
+
     @Override
     public Manufacturer create(Manufacturer manufacturer) {
         String insertManufacturerRequest =
@@ -43,13 +44,9 @@ public class ManufacturerDaoImpl implements ManufacturerDao {
         try (Connection connection = ConnectionUtil.getConnection();
                 Statement getAllManufacturerStatement = connection.createStatement()) {
             ResultSet resultSet = getAllManufacturerStatement
-                    .executeQuery("SELECT * FROM manufacturers WHERE is_deleted = false ");
+                    .executeQuery("SELECT * FROM manufacturers WHERE is_deleted = FALSE ");
             while (resultSet.next()) {
-                String name = resultSet.getString("name");
-                String country = resultSet.getString("country");
-                Long id = resultSet.getObject("id", Long.class);
-                Manufacturer manufacturer = new Manufacturer(id, name,country);
-                allManufacturer.add(manufacturer);
+                allManufacturer.add(getManufacturer(resultSet));
             }
         } catch (SQLException e) {
             throw new DataProcessingException("Can`t get all manufacturer from DB", e);
@@ -60,16 +57,14 @@ public class ManufacturerDaoImpl implements ManufacturerDao {
     @Override
     public Optional<Manufacturer> get(Long id) {
         String getManufacturerRequest = "SELECT * FROM manufacturers WHERE id = ? "
-                + "AND is_deleted = false";
+                + "AND is_deleted = FALSE";
         try (Connection connection = ConnectionUtil.getConnection();
                 PreparedStatement getByIdManufacturer =
                         connection.prepareStatement(getManufacturerRequest)) {
             getByIdManufacturer.setLong(1, id);
             ResultSet resultSet = getByIdManufacturer.executeQuery();
             if (resultSet.next()) {
-                Manufacturer manufacturer = new Manufacturer(resultSet.getObject("id", Long.class),
-                        resultSet.getString("name"), resultSet.getString("country"));
-                return Optional.of(manufacturer);
+                return Optional.of(getManufacturer(resultSet));
             }
         } catch (SQLException e) {
             throw new DataProcessingException("Can`t get manufacturer by id from DB", e);
@@ -81,7 +76,7 @@ public class ManufacturerDaoImpl implements ManufacturerDao {
     public Manufacturer update(Manufacturer manufacturer) {
         String updateManufacturerRequest =
                 "UPDATE  manufacturers SET name = ?, country = ?  "
-                        + "WHERE id = ? AND is_deleted = false";
+                        + "WHERE id = ? AND is_deleted = FALSE";
         try (Connection connection = ConnectionUtil.getConnection();
                 PreparedStatement updateManufacturerStatement =
                         connection.prepareStatement(updateManufacturerRequest)) {
@@ -98,7 +93,7 @@ public class ManufacturerDaoImpl implements ManufacturerDao {
     @Override
     public boolean delete(Long id) {
         String deleteRequest =
-                "UPDATE manufacturers SET is_deleted = true WHERE id = ?";
+                "UPDATE manufacturers SET is_deleted = TRUE WHERE id = ?";
         try (Connection connection = ConnectionUtil.getConnection();
                 PreparedStatement createManufacturerStatement =
                         connection.prepareStatement(deleteRequest)) {
@@ -107,6 +102,18 @@ public class ManufacturerDaoImpl implements ManufacturerDao {
         } catch (SQLException e) {
             throw new DataProcessingException(
                     "Can`t to mark as remote manufacturer with id = " + id, e);
+        }
+    }
+
+    private Manufacturer getManufacturer(ResultSet resultSet) {
+        try {
+            return new Manufacturer(
+                    resultSet.getObject("id", Long.class),
+                    resultSet.getString("name"),
+                    resultSet.getString("country"));
+        } catch (SQLException throwable) {
+            throw new DataProcessingException("Can't create manufacturer from "
+                    + resultSet, throwable);
         }
     }
 }
