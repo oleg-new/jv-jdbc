@@ -10,9 +10,9 @@ public class Main {
         Injector injector = Injector.getInstance("mate.jdbc");
         ManufacturerDao manufacturerDao
                 = (ManufacturerDao) injector.getInstance(ManufacturerDao.class);
-        Manufacturer fiat = new Manufacturer(null, "fiat", "Italy");
-        Manufacturer honda = new Manufacturer(null, "honda", "Japan");
-        Manufacturer ford = new Manufacturer(null, "ford", "USA");
+        Manufacturer fiat = new Manufacturer("fiat", "Italy");
+        Manufacturer honda = new Manufacturer("honda", "Japan");
+        Manufacturer ford = new Manufacturer("ford", "USA");
         manufacturerDao.create(fiat);
         manufacturerDao.create(honda);
         manufacturerDao.create(ford);
